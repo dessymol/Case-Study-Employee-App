@@ -1,58 +1,60 @@
-const express=require('express')
-const router=express.Router();
-const employeeroutes=require('../Models/employee')
+const express = require('express');
+const router = express.Router();
+const Employee = require('../Models/employee');
 
-
-
-router.get('/',async(req,res)=>{
-    try{
-        const users=await employeeroutes.find();
-        res.json(users)
-    }catch(error){
-        res.status(500).json({message:"Error fetching Employee",error});
-    }
+// HOME → GET ALL EMPLOYEES
+router.get('/', async (req, res) => {
+  try {
+    const users = await Employee.find();
+    res.render('home', { employees: users });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching Employee", error });
+  }
 });
 
-router.post('/add',async(req,res)=>{
-    try{
-        const newUser=new employeeroutes(req.body);
-        await newUser.save();
-        res.status(201).json({message:"Employee created successfully",newUser});
-    }catch(error){
-        res.status(500).json({message:"Error creating Employee",newUser});
-    }
+// ADD PAGE
+router.get('/add', (req, res) => {
+  res.render('add');
 });
 
-
-router.put('/update/:id',async(req,res)=>{
-    try {
-        const {id}=req.params;
-        const updatedUser=await employeeroutes.findByIdAndUpdate(id,req.body,{new:true});
-        res.json({message:"User updated successfully",updatedUser});
-    } catch (error) {
-        res.status(500).json({message:"Error updating user",error});
-    }       
+// POST → ADD EMPLOYEE
+router.post('/add', async (req, res) => {
+  try {
+    await Employee.create(req.body);
+    res.redirect('/employee');
+  } catch (error) {
+    res.status(500).json({ message: "Error creating Employee", error });
+  }
 });
 
-router.get('/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const user = await employeeroutes.findById(id);
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).json({
-            message: "Invalid ID or server error", error});
-    }
+// EDIT PAGE
+router.get('/edit/:id', async (req, res) => {
+  try {
+    const emp = await Employee.findById(req.params.id);
+    res.render('edit', { emp });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching Employee", error });
+  }
 });
 
-router.delete('/delete/:id',async(req,res)=>{
-    try{
-        const {id}=req.params;
-        await employeeroutes.findByIdAndDelete(id);
-        res.json({message:"Employee deleted successfully"});
-    }catch(error){
-        res.status(500).json({message:"Error deleting Employee",error})
-    }
+// PUT → UPDATE EMPLOYEE
+router.put('/update/:id', async (req, res) => {
+  try {
+    await Employee.findByIdAndUpdate(req.params.id, req.body);
+    res.redirect('/employee');
+  } catch (error) {
+    res.status(500).json({ message: "Error updating Employee", error });
+  }
 });
-module.exports=router;
+
+// DELETE → REMOVE EMPLOYEE
+router.delete('/delete/:id', async (req, res) => {
+  try {
+    await Employee.findByIdAndDelete(req.params.id);
+    res.redirect('/employee');
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting Employee", error });
+  }
+});
+
+module.exports = router;
